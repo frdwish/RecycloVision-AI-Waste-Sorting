@@ -1,0 +1,16 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Data / models (do not push)
+dataset/
+model/
+*.h5
+*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
