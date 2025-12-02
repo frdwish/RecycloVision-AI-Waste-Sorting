@@ -151,5 +151,9 @@ python train.py \
 
 ## App Screenshots
 
+**1st Photo->**
+<img width="1470" height="956" alt="Screenshot 2025-12-02 at 14 52 37" src="https://github.com/user-attachments/assets/b118e9d4-91ef-428d-8253-ecd1d82d212b" />
+**2nd Photo->**
+<img width="1470" height="956" alt="Screenshot 2025-12-02 at 14 52 37" src="dash2.png" />
 
 
