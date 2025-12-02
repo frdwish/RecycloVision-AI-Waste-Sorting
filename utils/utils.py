@@ -4,12 +4,16 @@ from torchvision import transforms
 from PIL import Image
 import os
 
+
+
+# Return MPS (Apple GPU) if available, otherwise CPU
 def get_device():
     if torch.backends.mps.is_available():
         return torch.device("mps")
     else:
         return torch.device("cpu")
 
+# Load trained model + labels from disk
 def load_model(model_path='model/model.pth', labels_path='model/labels.txt', device=None):
     if device is None:
         device = get_device()
@@ -29,6 +33,7 @@ def load_model(model_path='model/model.pth', labels_path='model/labels.txt', dev
     model.eval()
     return model, labels, device
 
+# Preprocess PIL image into model-ready tensor
 def preprocess_pil(img_pil, img_size=224):
     transform = transforms.Compose([
         transforms.Resize((img_size, img_size)),
@@ -37,12 +42,14 @@ def preprocess_pil(img_pil, img_size=224):
     ])
     return transform(img_pil).unsqueeze(0)
 
+# Predict class + confidence from image file or stream
 def predict_from_file(image_path_or_fileobj, model, labels, device, img_size=224):
     # image_path_or_fileobj can be a file path or file-like object (Streamlit upload)
     if hasattr(image_path_or_fileobj, "read"):
         img = Image.open(image_path_or_fileobj).convert("RGB")
     else:
         img = Image.open(image_path_or_fileobj).convert("RGB")
+    # Preprocess and move to device
     input_tensor = preprocess_pil(img, img_size=img_size).to(device)
     with torch.no_grad():
         out = model(input_tensor)

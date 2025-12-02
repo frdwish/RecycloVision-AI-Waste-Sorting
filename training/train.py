@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 training/train.py
-Transfer learning (ResNet-18) training script.
-Designed for macOS M1/M2 (uses MPS if available) or CPU fallback.
+Transfer learning (ResNet-18) training script...
+It is designed for macOS M1/M2 (uses MPS if available) or CPU fallback.
 Saves best model -> ../model/model.pth and ../model/labels.txt
 """
 import os
@@ -16,12 +16,16 @@ import torchvision.datasets as datasets
 from torchvision.models import resnet18
 import matplotlib.pyplot as plt
 
+
+# Return MPS (Apple GPU) if available, otherwise CPU
 def get_device():
     if torch.backends.mps.is_available():
         return torch.device("mps")
     else:
         return torch.device("cpu")
 
+
+# Parse command-line training arguments
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument('--data_dir', type=str, default='../dataset/dataset-resized/')
@@ -38,9 +42,12 @@ def main():
     args = parse_args()
     device = get_device()
     print("Using device:", device)
-
+    
+# Create output folder if missing
     os.makedirs(args.output_dir, exist_ok=True)
 
+
+# Image preprocessing + augmentations
     transform = transforms.Compose([
         transforms.Resize((args.img_size, args.img_size)),
         transforms.RandomHorizontalFlip(),
@@ -49,6 +56,8 @@ def main():
         transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
     ])
 
+
+# Load dataset from folder structure
     dataset = datasets.ImageFolder(args.data_dir, transform=transform)
     class_names = dataset.classes
     num_classes = len(class_names)
@@ -64,7 +73,7 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False,
                             num_workers=args.num_workers, pin_memory=True)
 
-    # Load pre-trained ResNet18
+# Load pre-trained ResNet18
     model = resnet18(weights="IMAGENET1K_V1")
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     model = model.to(device)
@@ -76,9 +85,12 @@ def main():
     train_losses = []
     val_accuracies = []
 
+# Training loop
     for epoch in range(args.epochs):
         model.train()
         running_loss = 0.0
+        
+        # Train on batches
         for images, labels in tqdm(train_loader, desc=f"Epoch {epoch+1}/{args.epochs} (train)"):
             images = images.to(device)
             labels = labels.to(device)
@@ -90,11 +102,12 @@ def main():
             optimizer.step()
 
             running_loss += loss.item() * images.size(0)
-
+        
+        # Average training loss
         epoch_loss = running_loss / len(train_loader.dataset)
         train_losses.append(epoch_loss)
 
-        # Validation
+# Validation
         model.eval()
         correct = 0
         total = 0
@@ -112,7 +125,7 @@ def main():
 
         print(f"Epoch {epoch+1}/{args.epochs}  TrainLoss: {epoch_loss:.4f}  ValAcc: {val_acc*100:.2f}%")
 
-        # Save best
+# Save best
         if val_acc > best_acc:
             best_acc = val_acc
             save_path = os.path.join(args.output_dir, "model.pth")
@@ -123,7 +136,7 @@ def main():
                     f.write(c + "\n")
             print(f"Saved best model to {save_path} (ValAcc: {best_acc*100:.2f}%)")
 
-    # plot curves
+# plot curves
     plt.figure(figsize=(10,4))
     plt.subplot(1,2,1)
     plt.plot(train_losses, label="train loss")
